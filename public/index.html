@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <style>
+        :root { --mnu-maroon: #8b1d22; }
+        body { font-family: sans-serif; margin:0; background:#f4f4f4; }
+        nav { background: var(--mnu-maroon); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }        
+        .container { padding:20px; display:flex; gap:20px; flex-wrap:wrap; }
+        .card { background:white; width:250px; padding:20px; border-top:5px solid #8b1d22; border-radius:5px; }
+        .btn { background:#8b1d22; color:white; border:none; padding:10px; width:100%; cursor:pointer; margin-top:10px; }
+    </style>
+</head>
+<body>
+    <nav><span> LMS - Welcome <b id="uName"></b></span> <button  onclick="localStorage.clear(); location.href='login.html'" style="background:white; color:var(--mnu-maroon); border:none; padding:8px 15px; cursor:pointer; border-radius:4px; font-weight:bold;">Logout</button></nav>
+    <div class="container" id="list"></div>
+    <script>
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    const name = localStorage.getItem('name');
+        async function load() {
+            const role = localStorage.getItem('role');
+            const token = localStorage.getItem('token');
+            const url = (role === 'admin' || role === 'superadmin') 
+                        ? '/api/courses' 
+                        : '/api/enrollments/my-courses';
+            
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+
+            const list = document.getElementById('list');
+            
+            list.innerHTML = data.map(item => {
+                const c = (role === 'admin' || role === 'superadmin') ? item : item.course_id;
+                if(!c) return '';
+
+                return `
+                    <div class="card">
+                        <h3>${c.title}</h3>
+                        <p>Instructor: ${c.teacher_id?.name || 'Staff'}</p>
+                        <button class="btn btn-primary" onclick="location.href='course.html?id=${c._id}'">Open Course</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        load();
+        if (role === 'superadmin') {
+    const adminLink = document.createElement('button');
+    adminLink.innerText = "System Admin Panel";
+    adminLink.onclick = () => location.href = 'superadmin.html';
+    adminLink.className = "mnu-btn"; 
+    document.querySelector('nav').appendChild(adminLink);
+}
+    </script>
+</body>
+</html>
